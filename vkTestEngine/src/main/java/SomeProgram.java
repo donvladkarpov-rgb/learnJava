@@ -8,8 +8,8 @@ public class SomeProgram {
         return str;
     }
 
-    public String echoWithParams(String str, int intPar, Float floatPar) {
-        return str + ", " + intPar + ", " + floatPar;
+    public String echoWithParams(String str, int intPar, Float floatPar, boolean booleanPar) {
+        return str + ", " + intPar + ", " + floatPar + ", " + booleanPar;
     }
 
 }

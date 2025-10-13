@@ -10,65 +10,61 @@ import java.util.StringTokenizer;
 
 public class TestRunner<T> {
 
-    private final Class<T> testClass;
-
-    public TestRunner(Class<T> testClass) {
-        this.testClass = testClass;
-    }
-
-    public void startTests() {
-        try {
-            Constructor<T> constructor = testClass.getConstructor();
-            Object testClassObject = constructor.newInstance();
-            List<TestsDTO> methodList = new ArrayList<>();
-            Method afterSuite = null;
-            Method beforeSuite = null;
-            Method afterTest = null;
-            Method beforeTest = null;
-            for (Method method : testClass.getMethods()) {
-                int modifiers = method.getModifiers();
-                Test testAnnotation = method.getAnnotation(Test.class);
-                if (testAnnotation != null) {
-                    String parSource = null;
-                    CsvSource sourceAnnotation = method.getAnnotation(CsvSource.class);
-                    if (sourceAnnotation != null) parSource = sourceAnnotation.value();
-                    methodList.add(new TestsDTO(testAnnotation.priority(), method, parseParSource(parSource, method.getParameterTypes())));
-                }
-                if (Modifier.isStatic(modifiers)) {
-                    if (method.getAnnotation(AfterSuite.class) != null)
-                        if (afterSuite == null) afterSuite = method;
-                        else throw new RuntimeException("Only one AfterSuite annotation is allowed!");
-                    if (method.getAnnotation(BeforeSuite.class) != null)
-                        if (beforeSuite == null) beforeSuite = method;
-                        else throw new RuntimeException("Only one BeforeSuite annotation is allowed!");
-                    if (method.getAnnotation(AfterTest.class) != null)
-                        if (afterTest == null) afterTest = method;
-                        else throw new RuntimeException("Only one AfterTest annotation is allowed!");
-                    if (method.getAnnotation(BeforeTest.class) != null)
-                        if (beforeTest == null) beforeTest = method;
-                        else throw new RuntimeException("Only one BeforeTest annotation is allowed!");
-                }
+    public static void runTests(Class c) throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+        Constructor constructor = c.getConstructor();
+        Object testClassObject = constructor.newInstance();
+        List<TestsDTO> methodList = new ArrayList<>();
+        TestsDTO afterSuite = null;
+        TestsDTO beforeSuite = null;
+        List<TestsDTO> afterTest = new ArrayList<>();
+        List<TestsDTO> beforeTest = new ArrayList<>();
+        for (Method method : c.getMethods()) {
+            int modifiers = method.getModifiers();
+            Test testAnnotation = method.getAnnotation(Test.class);
+            String parSource = null;
+            CsvSource sourceAnnotation = method.getAnnotation(CsvSource.class);
+            if (sourceAnnotation != null) parSource = sourceAnnotation.value();
+            Object[] sourcePar = parseParSource(parSource, method.getParameterTypes());
+            if (testAnnotation != null) {
+                methodList.add(new TestsDTO(testAnnotation.priority(), method, sourcePar));
             }
-            methodList.sort(null);
-            if (beforeSuite != null) beforeSuite.invoke(null);
-            for (TestsDTO testsDTO : methodList) {
-                if (beforeTest != null) beforeTest.invoke(null);
-                System.out.println("Test method [" + testsDTO + "] for class [" + testClass.getName() + "]");
-                if (testsDTO.parSource == null)
-                    testsDTO.method.invoke(testClassObject);
-                else
-                    testsDTO.method.invoke(testClassObject, testsDTO.parSource);
-                System.out.println("Test method [" + testsDTO + "] for class [" + testClass.getName() + "] passed successfully!");
-                if (afterTest != null) afterTest.invoke(null);
+            if (Modifier.isStatic(modifiers)) {
+                AfterTest afterTestAnnotation = method.getAnnotation(AfterTest.class);
+                BeforeTest beforeTestAnnotation = method.getAnnotation(BeforeTest.class);
+                if (method.getAnnotation(AfterSuite.class) != null)
+                    if (afterSuite == null) afterSuite = new TestsDTO(1, method, sourcePar);
+                    else throw new RuntimeException("Only one AfterSuite annotation is allowed!");
+                if (method.getAnnotation(BeforeSuite.class) != null)
+                    if (beforeSuite == null) beforeSuite = new TestsDTO(1, method, sourcePar);
+                    else throw new RuntimeException("Only one BeforeSuite annotation is allowed!");
+                if (afterTestAnnotation != null)
+                    afterTest.add(new TestsDTO(afterTestAnnotation.priority(), method, sourcePar));
+                if (beforeTestAnnotation != null)
+                    beforeTest.add(new TestsDTO(beforeTestAnnotation.priority(), method, sourcePar));
             }
-            if (afterSuite != null) afterSuite.invoke(null);
-        } catch (NoSuchMethodException | InvocationTargetException | InstantiationException |
-                 IllegalAccessException e) {
-            throw new RuntimeException(e);
         }
+        methodList.sort(null);
+        afterTest.sort(null);
+        beforeTest.sort(null);
+        if (beforeSuite != null) invokeMethod(beforeSuite, null);
+        for (TestsDTO testsDTO : methodList) {
+            for (TestsDTO beforeDTO : beforeTest) invokeMethod(beforeDTO, null);
+            System.out.println("Test method [" + testsDTO + "] for class [" + c.getName() + "]");
+            invokeMethod(testsDTO, testClassObject);
+            System.out.println("Test method [" + testsDTO + "] for class [" + c.getName() + "] passed successfully!");
+            for (TestsDTO afterDTO : afterTest) invokeMethod(afterDTO, null);
+        }
+        if (afterSuite != null) invokeMethod(afterSuite, null);
     }
 
-    private Object[] parseParSource(String parSource, Class<?>[] parTypes) {
+    private static void invokeMethod(TestsDTO testsDTO, Object testClassObject) throws IllegalAccessException, InvocationTargetException {
+        if (testsDTO.parSource == null)
+            testsDTO.method.invoke(testClassObject);
+        else
+            testsDTO.method.invoke(testClassObject, testsDTO.parSource);
+    }
+
+    static private Object[] parseParSource(String parSource, Class<?>[] parTypes) {
         List al = new ArrayList();
         if (parSource != null && !parSource.isEmpty()) {
             StringTokenizer st = new StringTokenizer(parSource, ", ", false);
@@ -81,34 +77,20 @@ public class TestRunner<T> {
         }
     }
 
-    private Object parTypeMap(String s, Class<?> parType) {
-        if (parType.equals(int.class)) { //int.class - это что-то для меня новое....
+    static private Object parTypeMap(String s, Class<?> parType) {
+        if (parType.equals(boolean.class) || parType.equals(Boolean.class)) {
+            return Boolean.valueOf(s);
+        }
+        if (parType.equals(int.class) || parType.equals(Integer.class)) {
             return Integer.valueOf(s);
         }
-        if (parType.equals(Integer.class)) {
-            return Integer.valueOf(s);
-        }
-        if (parType.equals(Float.class)) {
+        if (parType.equals(float.class) || parType.equals(Float.class)) {
             return Float.valueOf(s);
         }
-        if (parType.equals(Double.class)) {
-            return Float.valueOf(s);
+        if (parType.equals(double.class) || parType.equals(Double.class)) {
+            return Double.valueOf(s);
         }
         return s;
-    }
-
-    public static <T> void runTests(Class<T> testClass) {
-        TestRunner<T> testRunner = new TestRunner<>(testClass);
-        testRunner.startTests();
-    }
-
-    public static void runTests(String testClass) {
-        try {
-            TestRunner testRunner = new TestRunner(Class.forName(testClass));
-            testRunner.startTests();
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     private record TestsDTO(
