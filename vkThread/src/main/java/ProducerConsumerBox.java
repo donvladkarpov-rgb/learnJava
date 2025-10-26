@@ -1,4 +1,6 @@
 import java.util.concurrent.*;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class ProducerConsumerBox {
 
@@ -75,6 +77,18 @@ public class ProducerConsumerBox {
             System.out.println("All threads shutdown!");
         System.out.println("All threads is terminate!");
         if (set.size() != 100) throw new RuntimeException("Bullshit! " + set.size());
+//        ReentrantLock lock = new ReentrantLock(true);
+//        lock.lock();
+//        ReentrantReadWriteLock rwlock = new ReentrantReadWriteLock(true);
+//        rwlock.readLock();
+//        rwlock.writeLock();
+
+//        CountDownLatch cdl = new CountDownLatch(5);
+
+//        CyclicBarrier cb = new CyclicBarrier(4, () -> System.out.println("!"));
+
+        Semaphore s = new Semaphore(2, true);
+
     }
 
 }
