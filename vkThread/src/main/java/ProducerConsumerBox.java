@@ -87,7 +87,7 @@ public class ProducerConsumerBox {
 
 //        CyclicBarrier cb = new CyclicBarrier(4, () -> System.out.println("!"));
 
-        Semaphore s = new Semaphore(2, true);
+//        Semaphore s = new Semaphore(2, true);
 
     }
 
