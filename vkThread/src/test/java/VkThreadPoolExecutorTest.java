@@ -8,13 +8,13 @@ public class VkThreadPoolExecutorTest {
         for(int i = 0; i < 50; i++) {
             int intI = i;
             executor.execute(()-> {
-                System.out.println("Start job #" + intI);
+                System.out.println("Start job #" + intI + " in thread " + Thread.currentThread().getName());
                 try {
                     Thread.sleep(r.nextInt(1000, 3001));
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 } finally {
-                    System.out.println("Stop job #" + intI);
+                    System.out.println("Stop job #" + intI + " in thread " + Thread.currentThread().getName());
                 }
             });
         }

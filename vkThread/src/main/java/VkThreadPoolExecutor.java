@@ -14,7 +14,7 @@ public class VkThreadPoolExecutor {
     public VkThreadPoolExecutor(int poolSize) {
         synchronized (monitor) {
             for (int i = 0; i < poolSize; i++) {
-                VkThreadPoolThread t = new VkThreadPoolThread();
+                VkThreadPoolThread t = new VkThreadPoolThread("VkThreadPoolThread #" + i);
                 threadPool.add(t);
                 t.start();
             }
@@ -48,6 +48,12 @@ public class VkThreadPoolExecutor {
         }
     }
 
+    private boolean shouldThreadTerminated() {
+        synchronized (monitor) {
+            return shutdownState && jobs.isEmpty();
+        }
+    }
+
     public boolean isTerminated() {
         boolean terminated = true;
         for (VkThreadPoolThread t : threadPool) terminated = t.terminated && terminated;
@@ -67,28 +73,32 @@ public class VkThreadPoolExecutor {
 
         public volatile boolean terminated = false;
 
+        public VkThreadPoolThread(String name) {
+            super(name);
+        }
+
         @Override
         public void run() {
             try {
-                while (!(isInterrupted() || (VkThreadPoolExecutor.this.getShutdownState() && VkThreadPoolExecutor.this.isJobsEmpty()))) {
+                while (!(isInterrupted() || VkThreadPoolExecutor.this.shouldThreadTerminated())) {
                     Runnable job;
                     synchronized (monitor) {
                         job = jobs.pollLast();
-                    }
-                    if (job != null) {
-                        try {
-                            job.run();
-                        } catch (Exception e) {
-                            System.out.println("Error executing job!");
-                        }
-                    } else {
-                        synchronized (monitor) {
+                        if (job == null) {
                             try {
                                 monitor.wait();
                             } catch (InterruptedException e) {
                                 interrupt();
+                                System.out.println("Call interrupt() for thread " + getName());
                             }
+                            continue;
                         }
+                    }
+                    try {
+                        job.run();
+                    } catch (Exception e) {
+                        System.out.println("Error executing job for thread " + getName());
+                        System.out.println("Error message for thread " + getName() + " is '" + e.getMessage() + "'");
                     }
                 }
             } finally {
