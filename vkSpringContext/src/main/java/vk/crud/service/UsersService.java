@@ -1,9 +1,11 @@
-package vk.crud;
+package vk.crud.service;
+
+import vk.crud.model.User;
 
 import java.sql.SQLException;
 import java.util.List;
 
-public interface UserDao {
+public interface UsersService {
     List<User> selectAll() throws SQLException;
     User select(User user) throws SQLException;
     User insert(User user) throws SQLException;

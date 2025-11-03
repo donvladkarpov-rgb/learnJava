@@ -2,10 +2,14 @@ package vk.crud;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import vk.crud.config.AppConfig;
+import vk.crud.model.User;
+import vk.crud.service.UsersService;
 
 import java.sql.SQLException;
 
 public class Main {
+
     public static void main(String[] args) throws SQLException {
         ApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
         UsersService service = context.getBean(UsersService.class);
@@ -22,4 +26,5 @@ public class Main {
         System.out.println(service.selectAll().stream().peek(System.out::println).filter(u -> true).count());
         service.deleteAll();
     }
+
 }

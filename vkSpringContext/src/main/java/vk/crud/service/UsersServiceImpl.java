@@ -1,7 +1,9 @@
-package vk.crud;
+package vk.crud.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import vk.crud.dao.UserDao;
+import vk.crud.model.User;
 
 import java.sql.SQLException;
 import java.util.List;

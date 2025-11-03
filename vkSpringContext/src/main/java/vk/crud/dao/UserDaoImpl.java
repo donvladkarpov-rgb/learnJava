@@ -1,7 +1,8 @@
-package vk.crud;
+package vk.crud.dao;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Repository;
+import vk.crud.model.User;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -11,7 +12,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-@Service
+@Repository
 public class UserDaoImpl implements UserDao {
 
     private final DataSource dataSource;

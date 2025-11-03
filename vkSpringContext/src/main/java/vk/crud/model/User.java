@@ -1,4 +1,4 @@
-package vk.crud;
+package vk.crud.model;
 
 public record User(Long id, String username) {
     @Override
