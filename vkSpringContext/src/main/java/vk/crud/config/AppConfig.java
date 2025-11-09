@@ -13,7 +13,6 @@ import javax.sql.DataSource;
 
 @Configuration
 @PropertySource("classpath:application.properties")
-@ComponentScan("vk.crud")
 public class AppConfig {
 
     @Bean
