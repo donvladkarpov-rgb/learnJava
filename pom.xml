@@ -12,6 +12,7 @@
         <module>vkTestEngine</module>
         <module>vkStreamAPI</module>
         <module>vkThread</module>
+        <module>vkSpringContext</module>
     </modules>
 
     <properties>
