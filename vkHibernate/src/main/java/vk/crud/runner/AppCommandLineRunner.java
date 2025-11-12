@@ -8,6 +8,7 @@ import vk.crud.service.UsersService;
 
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
@@ -270,10 +271,10 @@ public class AppCommandLineRunner implements CommandLineRunner {
 
         if (!users.isEmpty()) {
             User oldestUser = users.stream()
-                    .min((u1, u2) -> u1.getCreatedAt().compareTo(u2.getCreatedAt()))
+                    .min(Comparator.comparing(User::getCreatedAt))
                     .orElse(null);
             User newestUser = users.stream()
-                    .max((u1, u2) -> u1.getCreatedAt().compareTo(u2.getCreatedAt()))
+                    .max(Comparator.comparing(User::getCreatedAt))
                     .orElse(null);
 
             long updatedCount = users.stream()
