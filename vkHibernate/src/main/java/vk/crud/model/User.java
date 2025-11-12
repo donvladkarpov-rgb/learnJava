@@ -1,7 +1,10 @@
 package vk.crud.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Entity
@@ -19,48 +22,40 @@ public class User {
     private String email;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
+    @CreationTimestamp
+    private Instant createdAt;
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    @UpdateTimestamp
+    private Instant updatedAt;
 
     // Конструктор по умолчанию (ОБЯЗАТЕЛЬНО для JPA)
     public User() {
-        this.createdAt = LocalDateTime.now();
     }
 
     // Конструктор для создания новых объектов
     public User(String username, String email) {
         this.username = username;
         this.email = email;
-        this.createdAt = LocalDateTime.now();
     }
     // Конструктор для создания новых объектов
     public User(Long id, String username, String email) {
         this.id = id;
         this.username = username;
         this.email = email;
-        this.createdAt = LocalDateTime.now();
     }
 
     // Геттеры
     public Long getId() { return id; }
     public String getUsername() { return username; }
     public String getEmail() { return email; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public Instant getCreatedAt() { return createdAt; }
+    public Instant getUpdatedAt() { return updatedAt; }
 
     // Сеттеры (только для тех полей, которые могут изменяться)
     public void setUsername(String username) { this.username = username; }
     public void setEmail(String email) { this.email = email; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
-
-    // Id и createdAt обычно не имеют сеттеров
-
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
+    public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
 
     @Override
     public String toString() {

@@ -175,7 +175,6 @@ public class AppCommandLineRunner implements CommandLineRunner {
                     user.setEmail(newEmail);
                 }
 
-                user.setUpdatedAt(LocalDateTime.now());
                 usersService.update(user);
                 System.out.println("✅ Пользователь успешно обновлен.");
             } else {
