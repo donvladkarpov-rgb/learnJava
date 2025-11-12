@@ -13,6 +13,7 @@
         <module>vkStreamAPI</module>
         <module>vkThread</module>
         <module>vkSpringContext</module>
+        <module>vkHibernate</module>
     </modules>
 
     <properties>
