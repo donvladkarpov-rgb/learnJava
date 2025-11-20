@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="data-001-1" author="Vlad">
+        <comment>Insert initial users</comment>
+        <insert tableName="users">
+            <column name="username" value="admin"/>
+            <column name="email" value="admin@example.com"/>
+            <column name="created_at" valueComputed="NOW()"/>
+        </insert>
+        <insert tableName="users">
+            <column name="username" value="user1"/>
+            <column name="email" value="user1@example.com"/>
+            <column name="created_at" valueComputed="NOW()"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

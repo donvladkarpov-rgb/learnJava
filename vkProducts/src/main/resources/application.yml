@@ -1,0 +1,79 @@
+spring:
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/learnJava
+    username: learnJava
+    password: learnJava
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: HikariCP-LearnJava
+      maximum-pool-size: 20
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      leak-detection-threshold: 60000
+
+  jpa:
+    open-in-view: false
+    generate-ddl: false
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        generate_statistics: false
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    enabled: true
+    default-schema: public
+    user: learnJava
+    password: learnJava
+    contexts: development
+
+  mvc:
+    format:
+      date: iso
+    throw-exception-if-no-handler-found: true
+    static-path-pattern: "/static/**"
+
+  web:
+    resources:
+      add-mappings: false
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+  error:
+    include-stacktrace: never
+    include-message: always
+    include-binding-errors: always
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+
+logging:
+  level:
+    root: INFO
+    org.springframework: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
+    org.hibernate.stat: DEBUG
+    liquibase: INFO
+    vk.crud: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.web.servlet: DEBUG
+
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
