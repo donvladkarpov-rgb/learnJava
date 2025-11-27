@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="001-create-client-balance-sequence" author="your-name">
+        <createSequence
+                sequenceName="client_balance_seq"
+                startValue="1"
+                incrementBy="1"
+                minValue="1"
+                maxValue="999999999"
+                cycle="false"/>
+    </changeSet>
+
+    <changeSet id="001-create-client-balance-table" author="your-name">
+        <createTable tableName="client_balance">
+            <column name="id" type="BIGINT" defaultValueComputed="nextval('client_balance_seq')">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="client_id" type="VARCHAR(50)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="card_number" type="VARCHAR(20)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="balance" type="DECIMAL(15,2)" defaultValue="0.00">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="client_balance" indexName="idx_client_balance_client_id">
+            <column name="client_id"/>
+        </createIndex>
+
+        <createIndex tableName="client_balance" indexName="idx_client_balance_card_number">
+            <column name="card_number"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

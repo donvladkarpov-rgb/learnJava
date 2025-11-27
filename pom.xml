@@ -14,7 +14,9 @@
         <module>vkThread</module>
         <module>vkSpringContext</module>
         <module>vkHibernate</module>
+        <module>vkUserProducts</module>
         <module>vkProducts</module>
+        <module>vkPayments</module>
     </modules>
 
     <properties>
