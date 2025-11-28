@@ -1,98 +1,122 @@
 package vk.crud.service.impl;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vk.crud.model.ClientProduct;
+import vk.crud.model.User;
+import vk.crud.model.dto.ClientProductRequest;
+import vk.crud.model.dto.ClientProductResponse;
+import vk.crud.model.dto.UserResponse;
 import vk.crud.repo.ClientProductRepository;
 import vk.crud.service.ClientProductService;
+import vk.crud.service.UserService;
+import vk.crud.model.dto.mappers.DtoMapper;
+import vk.crud.web.exceptions.ResourceNotFoundException;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
 public class ClientProductServiceImpl implements ClientProductService {
 
     private final ClientProductRepository clientProductRepository;
+    private final UserService userService;
 
-    @Autowired
-    public ClientProductServiceImpl(ClientProductRepository clientProductRepository) {
+    public ClientProductServiceImpl(ClientProductRepository clientProductRepository, UserService userService) {
         this.clientProductRepository = clientProductRepository;
+        this.userService = userService;
     }
 
     @Override
-    public List<ClientProduct> getAllProducts() {
-        return clientProductRepository.findAll();
+    public List<ClientProductResponse> getAllProducts() {
+        return clientProductRepository.findAll().stream()
+                .map(DtoMapper::toClientProductResponse)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public List<ClientProduct> getProductsByUserId(Long userId) {
-        return clientProductRepository.findByUserId(userId);
+    public List<ClientProductResponse> getProductsByUserId(Long userId) {
+        // Проверяем, что пользователь существует
+        userService.getUserById(userId); // бросит исключение, если нет
+
+        return clientProductRepository.findByUserId(userId).stream()
+                .map(DtoMapper::toClientProductResponse)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public Optional<ClientProduct> getProductByIdAndUserId(Long productId, Long userId) {
-        return clientProductRepository.findByIdAndUserId(productId, userId);
+    public ClientProductResponse getProductByIdAndUserId(Long productId, Long userId) {
+        ClientProduct product = clientProductRepository.findByIdAndUserId(productId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Product not found with id: " + productId + " for user: " + userId));
+        return DtoMapper.toClientProductResponse(product);
     }
 
     @Override
-    public List<ClientProduct> getProductsByType(String productType) {
-        return clientProductRepository.findByProductType(productType);
+    public List<ClientProductResponse> getProductsByType(String productType) {
+        return clientProductRepository.findByProductType(productType).stream()
+                .map(DtoMapper::toClientProductResponse)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public ClientProduct saveProduct(ClientProduct product) {
-        return clientProductRepository.save(product);
+    public ClientProductResponse createProduct(Long userId, ClientProductRequest productRequest) {
+        UserResponse userDto = userService.getUserById(userId); // ensure user exists
+        User user = DtoMapper.toUserEntity(DtoMapper.toUserRequest(userDto));
+        ClientProduct product = DtoMapper.toClientProductEntity(productRequest);
+        user.addProduct(product);
+        product.setUser(user);
+        ClientProduct saved = clientProductRepository.save(product);
+        return DtoMapper.toClientProductResponse(saved);
     }
 
     @Override
-    public Optional<ClientProduct> updateProduct(Long productId, Long userId, ClientProduct productDetails) {
-        return clientProductRepository.findByIdAndUserId(productId, userId)
-                .map(existingProduct -> {
-                    // Обновляем только те поля, которые должны быть изменяемыми
-                    if (productDetails.getAccountNumber() != null) {
-                        existingProduct.setAccountNumber(productDetails.getAccountNumber());
-                    }
-                    if (productDetails.getBalance() != null) {
-                        existingProduct.setBalance(productDetails.getBalance());
-                    }
-                    if (productDetails.getProductType() != null) {
-                        existingProduct.setProductType(productDetails.getProductType());
-                    }
-                    // User не обновляем, так как продукт привязан к конкретному пользователю
-                    return clientProductRepository.save(existingProduct);
-                });
+    public ClientProductResponse updateProduct(Long productId, Long userId, ClientProductRequest productRequest) {
+        ClientProduct existing = clientProductRepository.findByIdAndUserId(productId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Product not found with id: " + productId + " for user: " + userId));
+
+        // Обновляем только разрешённые поля
+        if (productRequest.getAccountNumber() != null) {
+            existing.setAccountNumber(productRequest.getAccountNumber());
+        }
+        if (productRequest.getBalance() != null) {
+            existing.setBalance(productRequest.getBalance());
+        }
+        if (productRequest.getProductType() != null) {
+            existing.setProductType(productRequest.getProductType());
+        }
+
+        ClientProduct updated = clientProductRepository.save(existing);
+        return DtoMapper.toClientProductResponse(updated);
     }
 
     @Override
     public void deleteProduct(Long id) {
+        if (!clientProductRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Product not found with id: " + id);
+        }
         clientProductRepository.deleteById(id);
     }
 
-    // Дополнительные методы для специфичной бизнес-логики
-    public List<ClientProduct> getProductsByTypeAndUserId(String productType, Long userId) {
-        return clientProductRepository.findByProductTypeAndUserId(productType, userId);
+    // Дополнительные методы
+    @Override
+    public List<ClientProductResponse> getProductsByTypeAndUserId(String productType, Long userId) {
+        return clientProductRepository.findByProductTypeAndUserId(productType, userId).stream()
+                .map(DtoMapper::toClientProductResponse)
+                .collect(Collectors.toList());
     }
 
-    public Optional<ClientProduct> getProductByAccountNumber(String accountNumber) {
-        return clientProductRepository.findByAccountNumber(accountNumber);
+    @Override
+    public ClientProductResponse getProductByAccountNumber(String accountNumber) {
+        ClientProduct product = clientProductRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with account: " + accountNumber));
+        return DtoMapper.toClientProductResponse(product);
     }
 
+    @Override
     public boolean productExistsByAccountNumber(String accountNumber) {
         return clientProductRepository.existsByAccountNumber(accountNumber);
-    }
-
-    // Старые методы для обратной совместимости (можно удалить со временем)
-    public ClientProduct createProduct(ClientProduct product) {
-        return saveProduct(product);
-    }
-
-    public ClientProduct updateProduct(ClientProduct product) {
-        return saveProduct(product);
-    }
-
-    public Optional<ClientProduct> getProductById(Long id) {
-        return clientProductRepository.findById(id);
     }
 }

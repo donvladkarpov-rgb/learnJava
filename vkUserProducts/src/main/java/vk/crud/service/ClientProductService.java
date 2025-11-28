@@ -1,15 +1,21 @@
 package vk.crud.service;
 
-import vk.crud.model.ClientProduct;
+import vk.crud.model.dto.ClientProductRequest;
+import vk.crud.model.dto.ClientProductResponse;
+
 import java.util.List;
-import java.util.Optional;
 
 public interface ClientProductService {
-    List<ClientProduct> getAllProducts();
-    List<ClientProduct> getProductsByUserId(Long userId);
-    Optional<ClientProduct> getProductByIdAndUserId(Long productId, Long userId);
-    List<ClientProduct> getProductsByType(String productType);
-    ClientProduct saveProduct(ClientProduct product);
-    Optional<ClientProduct> updateProduct(Long productId, Long userId, ClientProduct productDetails);
+    List<ClientProductResponse> getAllProducts();
+    List<ClientProductResponse> getProductsByUserId(Long userId);
+    ClientProductResponse getProductByIdAndUserId(Long productId, Long userId);
+    List<ClientProductResponse> getProductsByType(String productType);
+    ClientProductResponse createProduct(Long userId, ClientProductRequest productRequest);
+    ClientProductResponse updateProduct(Long productId, Long userId, ClientProductRequest productRequest);
     void deleteProduct(Long id);
+
+    // Дополнительные методы
+    List<ClientProductResponse> getProductsByTypeAndUserId(String productType, Long userId);
+    ClientProductResponse getProductByAccountNumber(String accountNumber);
+    boolean productExistsByAccountNumber(String accountNumber);
 }

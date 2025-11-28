@@ -1,14 +1,17 @@
 package vk.crud.service.impl;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vk.crud.model.User;
+import vk.crud.model.dto.UserRequest;
+import vk.crud.model.dto.UserResponse;
+import vk.crud.model.dto.mappers.DtoMapper;
 import vk.crud.repo.UserRepository;
 import vk.crud.service.UserService;
+import vk.crud.web.exceptions.ResourceNotFoundException;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -16,64 +19,68 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
 
-    @Autowired
     public UserServiceImpl(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
     @Override
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public List<UserResponse> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(DtoMapper::toUserResponse)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public Optional<User> getUserById(Long id) {
-        return userRepository.findById(id);
+    public UserResponse getUserById(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+        return DtoMapper.toUserResponse(user);
     }
 
     @Override
-    public Optional<User> getUserByEmail(String email) {
-        return userRepository.findByEmail(email);
+    public UserResponse getUserByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
+        return DtoMapper.toUserResponse(user);
     }
 
     @Override
-    public Optional<User> getUserByUsername(String username) {
-        return userRepository.findByUsername(username);
+    public UserResponse getUserByUsername(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
+        return DtoMapper.toUserResponse(user);
     }
 
     @Override
-    public User saveUser(User user) {
-        return userRepository.save(user);
+    public UserResponse createUser(UserRequest userRequest) {
+        User user = DtoMapper.toUserEntity(userRequest);
+        User saved = userRepository.save(user);
+        return DtoMapper.toUserResponse(saved);
     }
 
     @Override
-    public Optional<User> updateUser(Long id, User userDetails) {
-        return userRepository.findById(id)
-                .map(existingUser -> {
-                    // Обновляем только те поля, которые должны быть изменяемыми
-                    if (userDetails.getUsername() != null) {
-                        existingUser.setUsername(userDetails.getUsername());
-                    }
-                    if (userDetails.getEmail() != null) {
-                        existingUser.setEmail(userDetails.getEmail());
-                    }
-                    // Другие поля, которые можно обновлять
-                    return userRepository.save(existingUser);
-                });
+    public UserResponse updateUser(Long id, UserRequest userRequest) {
+        User existing = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+
+        // Обновляем только разрешённые поля
+        if (userRequest.getUsername() != null) {
+            existing.setUsername(userRequest.getUsername());
+        }
+        if (userRequest.getEmail() != null) {
+            existing.setEmail(userRequest.getEmail());
+        }
+        // Другие поля (если нужно)
+
+        User updated = userRepository.save(existing);
+        return DtoMapper.toUserResponse(updated);
     }
 
     @Override
     public void deleteUser(Long id) {
+        if (!userRepository.existsById(id)) {
+            throw new ResourceNotFoundException("User not found with id: " + id);
+        }
         userRepository.deleteById(id);
     }
-
-    // Старые методы для обратной совместимости (можно удалить со временем)
-    public User createUser(User user) {
-        return saveUser(user);
-    }
-
-    public User updateUser(User user) {
-        return saveUser(user);
-    }
-
 }

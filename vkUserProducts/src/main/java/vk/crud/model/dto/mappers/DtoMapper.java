@@ -56,6 +56,14 @@ public class DtoMapper {
         );
     }
 
+    public static UserRequest toUserRequest(UserResponse userResponse) {
+        if (userResponse == null) return null;
+        UserRequest userRequest = new UserRequest();
+        userRequest.setEmail(userResponse.getEmail());
+        userRequest.setUsername(userResponse.getUsername());
+        return userRequest;
+    }
+
     // Конвертация UserRequest DTO → User Entity
     public static User toUserEntity(UserRequest userRequest) {
         if (userRequest == null) return null;
@@ -89,4 +97,13 @@ public class DtoMapper {
                 .map(DtoMapper::toClientProductResponse)
                 .collect(Collectors.toList());
     }
+
+    public static ClientProductRequest toClientProductRequest(ClientProductResponse clientProductResponse) {
+        ClientProductRequest clientProductRequest = new ClientProductRequest();
+        clientProductRequest.setBalance(clientProductResponse.getBalance());
+        clientProductRequest.setProductType(clientProductResponse.getProductType());
+        clientProductRequest.setAccountNumber(clientProductResponse.getAccountNumber());
+        return clientProductRequest;
+    }
+
 }

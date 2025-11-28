@@ -3,83 +3,65 @@ package vk.crud.web;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import vk.crud.model.Product;
-import vk.crud.repo.ProductRepository;
+import vk.crud.model.dto.ProductDto;
+import vk.crud.service.ProductService;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/products")
 @Tag(name = "Products API", description = "CRUD операции для управления продуктами")
 public class ProductController {
 
-    private ProductRepository productRepository;
+    private final ProductService productService;
 
-    public ProductController(@Autowired ProductRepository productRepository) {
-        this.productRepository = productRepository;
+    public ProductController(ProductService productService) {
+        this.productService = productService;
     }
 
     @GetMapping
     @Operation(summary = "Получить все продукты", description = "Возвращает список всех продуктов")
-    public ResponseEntity<List<Product>> getAllProducts() {
-        List<Product> products = productRepository.findAll();
-        return ResponseEntity.ok(products);
+    public ResponseEntity<List<ProductDto>> getAllProducts() {
+        return ResponseEntity.ok(productService.getAllProducts());
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Получить продукт по ID", description = "Возвращает продукт по указанному идентификатору")
-    public ResponseEntity<Product> getProductById(
+    public ResponseEntity<ProductDto> getProductById(
             @Parameter(description = "Идентификатор продукта")
             @PathVariable("id") Long id) {
-        Optional<Product> product = productRepository.findById(id);
-        return product.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(productService.getProductById(id));
     }
 
     @GetMapping("/category/{category}")
     @Operation(summary = "Получить продукты по категории", description = "Возвращает список продуктов указанной категории")
-    public ResponseEntity<List<Product>> getProductsByCategory(
+    public ResponseEntity<List<ProductDto>> getProductsByCategory(
             @Parameter(description = "Категория продукта")
             @PathVariable("category") String category) {
-        List<Product> products = productRepository.findByCategory(category);
-        return ResponseEntity.ok(products);
+        return ResponseEntity.ok(productService.getProductsByCategory(category));
     }
 
     @PostMapping
     @Operation(summary = "Создать новый продукт", description = "Создает новый продукт с указанными данными")
-    public ResponseEntity<Product> createProduct(
+    public ResponseEntity<ProductDto> createProduct(
             @Parameter(description = "Данные продукта")
-            @RequestBody Product product) {
-        Product savedProduct = productRepository.save(product);
+            @RequestBody ProductDto productDto) {
+        ProductDto savedProduct = productService.createProduct(productDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedProduct);
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Обновить продукт", description = "Обновляет данные продукта по указанному идентификатору")
-    public ResponseEntity<Product> updateProduct(
+    public ResponseEntity<ProductDto> updateProduct(
             @Parameter(description = "Идентификатор продукта")
             @PathVariable("id") Long id,
             @Parameter(description = "Обновленные данные продукта")
-            @RequestBody Product productDetails) {
-        Optional<Product> optionalProduct = productRepository.findById(id);
-
-        if (optionalProduct.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        Product product = optionalProduct.get();
-        product.setName(productDetails.getName());
-        product.setCategory(productDetails.getCategory());
-        product.setPrice(productDetails.getPrice());
-        product.setStock(productDetails.getStock());
-
-        Product updatedProduct = productRepository.save(product);
+            @RequestBody ProductDto productDetails) {
+        ProductDto updatedProduct = productService.updateProduct(id, productDetails);
         return ResponseEntity.ok(updatedProduct);
     }
 
@@ -88,51 +70,30 @@ public class ProductController {
     public ResponseEntity<Void> deleteProduct(
             @Parameter(description = "Идентификатор продукта")
             @PathVariable("id") Long id) {
-        if (!productRepository.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
-
-        productRepository.deleteById(id);
+        productService.deleteProduct(id);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/stock")
     @Operation(summary = "Обновить остаток продукта", description = "Обновляет количество остатка продукта")
-    public ResponseEntity<Product> updateStock(
+    public ResponseEntity<ProductDto> updateStock(
             @Parameter(description = "Идентификатор продукта")
             @PathVariable("id") Long id,
             @Parameter(description = "Новое значение остатка")
             @RequestParam("stock") Integer stock) {
-        Optional<Product> optionalProduct = productRepository.findById(id);
-
-        if (optionalProduct.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        Product product = optionalProduct.get();
-        product.setStock(stock);
-
-        Product updatedProduct = productRepository.save(product);
+        ProductDto updatedProduct = productService.updateStock(id, stock);
         return ResponseEntity.ok(updatedProduct);
     }
 
     @PatchMapping("/{id}/price")
     @Operation(summary = "Обновить цену продукта", description = "Обновляет цену продукта")
-    public ResponseEntity<Product> updatePrice(
+    public ResponseEntity<ProductDto> updatePrice(
             @Parameter(description = "Идентификатор продукта")
             @PathVariable("id") Long id,
             @Parameter(description = "Новое значение цены")
             @RequestParam("price") BigDecimal price) {
-        Optional<Product> optionalProduct = productRepository.findById(id);
-
-        if (optionalProduct.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        Product product = optionalProduct.get();
-        product.setPrice(price);
-
-        Product updatedProduct = productRepository.save(product);
+        ProductDto updatedProduct = productService.updatePrice(id, price);
         return ResponseEntity.ok(updatedProduct);
     }
+
 }
