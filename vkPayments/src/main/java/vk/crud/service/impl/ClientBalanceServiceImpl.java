@@ -2,10 +2,13 @@ package vk.crud.service.impl;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import vk.crud.client.ProductRestClient;
 import vk.crud.model.ClientBalance;
 import vk.crud.model.dto.ClientBalanceDto;
+import vk.crud.model.dto.prodact.ProductDto;
 import vk.crud.repo.ClientBalanceRepository;
 import vk.crud.service.ClientBalanceService;
+import vk.crud.web.exceptions.ResourceNotFoundException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -17,9 +20,11 @@ import java.util.stream.Collectors;
 public class ClientBalanceServiceImpl implements ClientBalanceService {
 
     private final ClientBalanceRepository clientBalanceRepository;
+    private final ProductRestClient productRestClient;
 
-    public ClientBalanceServiceImpl(ClientBalanceRepository clientBalanceRepository) {
+    public ClientBalanceServiceImpl(ClientBalanceRepository clientBalanceRepository, ProductRestClient productRestClient) {
         this.clientBalanceRepository = clientBalanceRepository;
+        this.productRestClient = productRestClient;
     }
 
     private ClientBalanceDto convertToDto(ClientBalance balance) {
@@ -45,7 +50,9 @@ public class ClientBalanceServiceImpl implements ClientBalanceService {
     }
 
     @Override
-    public Optional<ClientBalanceDto> getBalanceByClientId(String clientId) {
+    public Optional<ClientBalanceDto> getBalanceByClientId(String clientId, Long productId, Long quantity) {
+        ProductDto productDto = productRestClient.getProductById(productId);
+        if (quantity > productDto.getStock()) throw new ResourceNotFoundException("Нет товара!");
         return clientBalanceRepository.findByClientId(clientId)
                 .map(this::convertToDto);
     }

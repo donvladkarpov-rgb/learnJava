@@ -12,7 +12,7 @@ public interface ClientBalanceService {
 
     Optional<ClientBalanceDto> getBalanceById(Long id);
 
-    Optional<ClientBalanceDto> getBalanceByClientId(String clientId);
+    Optional<ClientBalanceDto> getBalanceByClientId(String clientId, Long productId, Long quantity);
 
     Optional<ClientBalanceDto> getBalanceByCardNumber(String cardNumber);
 

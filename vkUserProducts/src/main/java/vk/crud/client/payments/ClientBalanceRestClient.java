@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import vk.crud.model.dto.payments.ClientBalanceDto;
+import vk.crud.model.dto.prodact.ProductDto;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -36,8 +37,8 @@ public class ClientBalanceRestClient {
         return restTemplate.getForObject(baseUrl + "/" + id, ClientBalanceDto.class);
     }
 
-    public ClientBalanceDto getBalanceByClientId(String clientId) {
-        return restTemplate.getForObject(baseUrl + "/client/" + clientId, ClientBalanceDto.class);
+    public ClientBalanceDto getBalanceByClientId(String clientId, Long productId) {
+        return restTemplate.getForObject(baseUrl + "/client/" + clientId + "/" + productId, ClientBalanceDto.class);
     }
 
     public ClientBalanceDto getBalanceByCardNumber(String cardNumber) {

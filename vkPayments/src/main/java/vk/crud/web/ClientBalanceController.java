@@ -9,12 +9,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import vk.crud.model.dto.ClientBalanceDto;
 import vk.crud.service.ClientBalanceService;
+import vk.crud.web.exceptions.ResourceNotFoundException;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/client-balances")
+@RequestMapping("/api/v1/client-balances")
 @Tag(name = "Client Balance API", description = "Управление балансами клиентов")
 public class ClientBalanceController {
 
@@ -26,43 +27,45 @@ public class ClientBalanceController {
 
     @GetMapping
     @Operation(summary = "Получить все балансы клиентов")
-    public ResponseEntity<List<ClientBalanceDto>> getAllBalances() {
-        return ResponseEntity.ok(clientBalanceService.getAllBalances());
+    public List<ClientBalanceDto> getAllBalances() {
+        return clientBalanceService.getAllBalances();
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Получить баланс по ID")
-    public ResponseEntity<ClientBalanceDto> getBalanceById(
+    public ClientBalanceDto getBalanceById(
             @Parameter(description = "ID записи баланса", example = "1", required = true)
             @PathVariable("id") Long id) {
         return clientBalanceService.getBalanceById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(()->new ResourceNotFoundException("Баланс клиента не найден!"));
     }
 
-    @GetMapping("/client/{clientId}")
+    @GetMapping("/client/{clientId}/{productId}/{quantity}")
     @Operation(summary = "Получить баланс по ID клиента")
-    public ResponseEntity<ClientBalanceDto> getBalanceByClientId(
+    public ClientBalanceDto getBalanceByClientId(
             @Parameter(description = "ID клиента", example = "CLIENT_12345", required = true)
-            @PathVariable("clientId") String clientId) {
-        return clientBalanceService.getBalanceByClientId(clientId)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+            @PathVariable("clientId") String clientId,
+            @Parameter(description = "ID товара", example = "12345", required = true)
+            @PathVariable("productId") Long productId,
+            @Parameter(description = "Количество товара", example = "12345", required = true)
+            @PathVariable("quantity") Long quantity
+            ) {
+        return clientBalanceService.getBalanceByClientId(clientId, productId, quantity)
+                .orElseThrow(()->new ResourceNotFoundException("Баланс клиента не найден!"));
     }
 
     @GetMapping("/card/{cardNumber}")
     @Operation(summary = "Получить баланс по номеру карты")
-    public ResponseEntity<ClientBalanceDto> getBalanceByCardNumber(
+    public ClientBalanceDto getBalanceByCardNumber(
             @Parameter(description = "Номер карты", example = "4111111111111111", required = true)
             @PathVariable("cardNumber") String cardNumber) {
         return clientBalanceService.getBalanceByCardNumber(cardNumber)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(()->new ResourceNotFoundException("Баланс клиента не найден!"));
     }
 
     @PostMapping
     @Operation(summary = "Создать новый баланс клиента")
-    public ResponseEntity<ClientBalanceDto> createBalance(
+    public ClientBalanceDto createBalance(
             @Parameter(description = "ID клиента", example = "CLIENT_12345", required = true)
             @RequestParam("clientId") String clientId,
             @Parameter(description = "Номер карты", example = "4111111111111111", required = true)
@@ -71,13 +74,12 @@ public class ClientBalanceController {
             @RequestParam(value = "balance", defaultValue = "0.00") BigDecimal balance) {
 
         return clientBalanceService.createBalance(clientId, cardNumber, balance)
-                .map(dto -> ResponseEntity.status(HttpStatus.CREATED).body(dto))
-                .orElse(ResponseEntity.status(HttpStatus.CONFLICT).build());
+                .orElseThrow(()->new ResourceNotFoundException("Баланс клиента не найден!"));
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Обновить баланс клиента")
-    public ResponseEntity<ClientBalanceDto> updateBalance(
+    public ClientBalanceDto updateBalance(
             @Parameter(description = "ID записи баланса", example = "1", required = true)
             @PathVariable("id") Long id,
             @Parameter(description = "ID клиента", example = "CLIENT_12345", required = true)
@@ -88,43 +90,38 @@ public class ClientBalanceController {
             @RequestParam("balance") BigDecimal balance) {
 
         return clientBalanceService.updateBalance(id, clientId, cardNumber, balance)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(()->new ResourceNotFoundException("Баланс клиента не найден!"));
     }
 
     @PatchMapping("/{id}/deposit")
     @Operation(summary = "Пополнить баланс")
-    public ResponseEntity<ClientBalanceDto> depositBalance(
+    public ClientBalanceDto depositBalance(
             @Parameter(description = "ID записи баланса", example = "1", required = true)
             @PathVariable("id") Long id,
             @Parameter(description = "Сумма пополнения", example = "500.00", required = true)
             @RequestParam("amount") BigDecimal amount) {
 
         return clientBalanceService.depositBalance(id, amount)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(()->new ResourceNotFoundException("Баланс клиента не найден!"));
     }
 
     @PatchMapping("/{id}/withdraw")
     @Operation(summary = "Списать с баланса")
-    public ResponseEntity<ClientBalanceDto> withdrawBalance(
+    public ClientBalanceDto withdrawBalance(
             @Parameter(description = "ID записи баланса", example = "1", required = true)
             @PathVariable("id") Long id,
             @Parameter(description = "Сумма списания", example = "200.50", required = true)
             @RequestParam("amount") BigDecimal amount) {
 
         return clientBalanceService.withdrawBalance(id, amount)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.status(HttpStatus.BAD_REQUEST).build());
+                .orElseThrow(()->new ResourceNotFoundException("Баланс клиента не найден!"));
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Удалить баланс клиента")
-    public ResponseEntity<Void> deleteBalance(
+    public void deleteBalance(
             @Parameter(description = "ID записи баланса", example = "1", required = true)
             @PathVariable("id") Long id) {
-        return clientBalanceService.deleteBalance(id)
-                ? ResponseEntity.noContent().build()
-                : ResponseEntity.notFound().build();
+        clientBalanceService.deleteBalance(id);
     }
 }

@@ -39,7 +39,7 @@ public class BayServiceImpl implements BayService {
         request.getProducts().forEach( p -> {
             ProductDto pdto = productRestClient.getProductById(p.getId());
             if (p.getQuantity() <= pdto.getStock()) {
-                ClientBalanceDto clientBalanceDto = clientBalanceRestClient.getBalanceByClientId(request.getId().toString());
+                ClientBalanceDto clientBalanceDto = clientBalanceRestClient.getBalanceByClientId(request.getId().toString(), pdto.getId());
                 if (clientBalanceDto.getBalance().compareTo(pdto.getPrice().multiply(BigDecimal.valueOf(p.getQuantity()))) > 0) {
                     //отсюда убираем
                     productRestClient.updateStock(p.getId(), pdto.getStock() - p.getQuantity());
