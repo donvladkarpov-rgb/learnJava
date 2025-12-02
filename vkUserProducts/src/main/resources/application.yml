@@ -48,7 +48,7 @@ spring:
       add-mappings: false
 
 server:
-  port: 8081
+  port: 8080
   servlet:
     context-path: /api
   error:
@@ -77,3 +77,12 @@ logging:
 
   pattern:
     console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+product:
+  client:
+    base-url: http://localhost:8081/api/products
+
+client-balance:
+  client:
+    base-url: http://localhost:8082/api/client-balances
+
