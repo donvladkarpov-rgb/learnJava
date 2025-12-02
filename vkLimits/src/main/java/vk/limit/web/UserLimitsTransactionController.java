@@ -1,13 +1,11 @@
 package vk.limit.web;
 
-import vk.limit.service.UserLimitsTransactionService;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.HashMap;
-import java.util.Map;
+import vk.limit.model.dto.TransactionInfo;
+import vk.limit.service.UserLimitsTransactionService;
 
 @RestController
-@RequestMapping("/api/limits/transactions")
+@RequestMapping("/api/v1/limits/transactions")
 public class UserLimitsTransactionController {
 
     private final UserLimitsTransactionService transactionService;
@@ -20,148 +18,58 @@ public class UserLimitsTransactionController {
      * Получить текущий лимит пользователя
      */
     @GetMapping("/{username}/current-limit")
-    public Map<String, Object> getCurrentLimit(@PathVariable String username) {
-        Long currentLimit = transactionService.getCurrentLimit(username);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("username", username);
-        response.put("currentLimit", currentLimit);
-        response.put("status", "SUCCESS");
-        response.put("message", "Current limit retrieved successfully");
-
-        return response;
+    public Long getCurrentLimit(@PathVariable String username) {
+        return transactionService.getCurrentLimit(username);
     }
 
     /**
      * Установить лимит пользователя
      */
     @PutMapping("/{username}/limit")
-    public Map<String, Object> setUserLimit(
+    public Boolean setUserLimit(
             @PathVariable String username,
             @RequestParam Long newLimit) {
-
-        transactionService.setUserLimit(username, newLimit);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("username", username);
-        response.put("newLimit", newLimit);
-        response.put("status", "SUCCESS");
-        response.put("message", "User limit updated successfully");
-
-        return response;
+        return transactionService.setUserLimit(username, newLimit);
     }
 
     /**
      * Установить дефолтный лимит для всех пользователей
      */
     @PutMapping("/default-limit")
-    public Map<String, Object> setDefaultLimitForAllUsers(
+    public Boolean setDefaultLimitForAllUsers(
             @RequestParam Long defaultLimit) {
-
-        transactionService.setDefaultLimitForAllUsers(defaultLimit);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("defaultLimit", defaultLimit);
-        response.put("status", "SUCCESS");
-        response.put("message", "Default limit set for all users successfully");
-
-        return response;
+        return transactionService.setDefaultLimitForAllUsers(defaultLimit);
     }
 
     // ========== СУЩЕСТВУЮЩИЕ МЕТОДЫ ==========
 
     @PostMapping("/reserve")
-    public Map<String, Object> reserveLimit(
+    public String reserveLimit(
             @RequestParam String username,
             @RequestParam Long amount) {
-
-        String transactionId = transactionService.reserveLimit(username, amount);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("transactionId", transactionId);
-        response.put("status", "RESERVED");
-        response.put("username", username);
-        response.put("amount", amount);
-        response.put("message", "Limit reserved successfully");
-
-        return response;
+        return transactionService.reserveLimit(username, amount);
     }
 
     @PostMapping("/confirm")
-    public Map<String, Object> confirmLimitDeduction(
+    public Boolean confirmLimitDeduction(
             @RequestParam String transactionId) {
-
-        transactionService.confirmLimitDeduction(transactionId);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("transactionId", transactionId);
-        response.put("status", "CONFIRMED");
-        response.put("message", "Transaction confirmed successfully");
-
-        return response;
+        return transactionService.confirmLimitDeduction(transactionId);
     }
 
     @PostMapping("/rollback")
-    public Map<String, Object> rollbackLimitDeduction(
+    public Boolean rollbackLimitDeduction(
             @RequestParam String transactionId) {
-
-        transactionService.rollbackLimitDeduction(transactionId);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("transactionId", transactionId);
-        response.put("status", "ROLLED_BACK");
-        response.put("message", "Transaction rolled back successfully");
-
-        return response;
+        return transactionService.rollbackLimitDeduction(transactionId);
     }
 
     @GetMapping("/status/{transactionId}")
-    public Map<String, Object> getTransactionStatus(
+    public TransactionInfo getTransactionStatus(
             @PathVariable String transactionId) {
-
-        UserLimitsTransactionService.TransactionInfo transactionInfo =
-                transactionService.getTransactionInfo(transactionId);
-
-        Map<String, Object> response = new HashMap<>();
-
-        if (transactionInfo == null) {
-            response.put("transactionId", transactionId);
-            response.put("status", "NOT_FOUND");
-            response.put("message", "Transaction not found");
-        } else {
-            response.put("transactionId", transactionInfo.getTransactionId());
-            response.put("username", transactionInfo.getUsername());
-            response.put("amount", transactionInfo.getAmount());
-            response.put("previousLimit", transactionInfo.getPreviousLimit());
-            response.put("createdAt", transactionInfo.getCreatedAt());
-            response.put("status", transactionInfo.getStatus());
-
-            String message;
-            switch (transactionInfo.getStatus()) {
-                case "PENDING":
-                    message = "Transaction is pending confirmation";
-                    break;
-                case "EXPIRED":
-                    message = "Transaction has expired";
-                    break;
-                default:
-                    message = "Transaction status: " + transactionInfo.getStatus();
-            }
-            response.put("message", message);
-        }
-
-        return response;
+        return transactionService.getTransactionInfo(transactionId);
     }
 
     @PostMapping("/cleanup")
-    public Map<String, Object> cleanupExpiredTransactions() {
-
-        transactionService.cleanupExpiredTransactions();
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "SUCCESS");
-        response.put("message", "Expired transactions cleanup completed");
-
-        return response;
+    public Boolean cleanupExpiredTransactions() {
+        return transactionService.cleanupExpiredTransactions();
     }
 }

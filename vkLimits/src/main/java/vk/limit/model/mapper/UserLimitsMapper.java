@@ -1,5 +1,7 @@
 package vk.limit.model.mapper;
 
+import vk.limit.model.Transaction;
+import vk.limit.model.dto.TransactionInfo;
 import vk.limit.model.dto.UserLimitsDto;
 import vk.limit.model.UserLimits;
 import vk.limit.model.UserLimitsRollback;
@@ -76,4 +78,27 @@ public class UserLimitsMapper {
             entity.setUserLimit(dto.getUserLimit());
         }
     }
+
+    public static Transaction toEntity(TransactionInfo dto) {
+        return new Transaction(
+                dto.getTransactionId(),
+                dto.getUsername(),
+                dto.getAmount(),
+                dto.getPreviousLimit(),
+                dto.getCreatedAt(),
+                dto.getStatus()
+        );
+    }
+
+    public static TransactionInfo toDto(Transaction entity) {
+        return new TransactionInfo(
+                entity.getTransactionId(),
+                entity.getUsername(),
+                entity.getAmount(),
+                entity.getPreviousLimit(),
+                entity.getCreatedAt(),
+                entity.getStatus()
+        );
+    }
+
 }
