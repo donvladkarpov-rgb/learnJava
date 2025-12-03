@@ -17,6 +17,7 @@
         <module>vkUserProducts</module>
         <module>vkProducts</module>
         <module>vkPayments</module>
+        <module>vkLimits</module>
     </modules>
 
     <properties>
